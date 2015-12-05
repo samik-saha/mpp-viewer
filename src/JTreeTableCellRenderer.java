@@ -1,13 +1,11 @@
 import java.awt.Component;
 import java.awt.Graphics;
-import java.awt.event.MouseEvent;
 import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
 
 import javax.swing.JTable;
 import javax.swing.JTree;
-import javax.swing.ToolTipManager;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;

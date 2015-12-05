@@ -7,12 +7,6 @@ import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
-import net.sf.mpxj.ProjectFile;
-import net.sf.mpxj.Relation;
-import net.sf.mpxj.Resource;
-import net.sf.mpxj.ResourceAssignment;
-import net.sf.mpxj.Task;
-
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -22,6 +16,12 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import net.sf.mpxj.ProjectFile;
+import net.sf.mpxj.Relation;
+import net.sf.mpxj.Resource;
+import net.sf.mpxj.ResourceAssignment;
+import net.sf.mpxj.Task;
 
 public class ExcelOutput extends SwingWorker<Void, Void> {
 	Workbook wb;

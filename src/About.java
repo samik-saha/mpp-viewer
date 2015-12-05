@@ -1,21 +1,22 @@
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
 
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingConstants;
-import java.awt.FlowLayout;
-import javax.swing.BoxLayout;
 import javax.swing.border.EmptyBorder;
-import javax.swing.Box;
-import java.awt.Dimension;
 
 
 public class About extends JDialog {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Launch the application.

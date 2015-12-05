@@ -1,5 +1,8 @@
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JComponent;
 
 /*
  *  The ActionMapAction class is a convenience class that allows you to use
@@ -16,6 +19,10 @@ import javax.swing.*;
  */
 public class ActionMapAction extends AbstractAction
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private Action originalAction;
 	private JComponent component;
 	private String actionCommand = "";
