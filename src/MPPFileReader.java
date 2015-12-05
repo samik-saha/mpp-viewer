@@ -121,8 +121,9 @@ public class MPPFileReader extends SwingWorker<Void, Void> {
 				resourceCount = resourceAssignments.size();
 				for (ResourceAssignment assignment : resourceAssignments) {
 					Resource resource = assignment.getResource();
-					resourceNames = resourceNames + (resource == null ? "" : resource.getName());
+					resourceNames = resourceNames + (resource == null ? "" : ", "+resource.getName());
 				}
+				if (resourceNames.startsWith(", ")) resourceNames=resourceNames.substring(2);
 			}
 
 			String duration = MainWindow.fmt(child.getDuration().getDuration());
