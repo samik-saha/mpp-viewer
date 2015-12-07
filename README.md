@@ -1,15 +1,7 @@
 **mpp-viewer** is a simple java based open-source application for viewing Microsoft Project Plan or MPP files. It has a similar interface as Microsoft projects and displays tasks, start/end date, predecessor, resource etc. Also, mpp files can be exported to Excel
 
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js">
-</script>
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-8085801308709739"
-     data-ad-slot="2927028551"
-     data-ad-format="auto"></ins>
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script>
+### Downloads
+* [Latest Release](https://github.com/samik-saha/mpp-viewer/releases/latest)
 
 ###Features
 
