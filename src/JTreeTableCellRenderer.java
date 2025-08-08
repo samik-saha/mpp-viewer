@@ -1,5 +1,4 @@
-import java.awt.Component;
-import java.awt.Graphics;
+import java.awt.*;
 import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
@@ -83,7 +82,7 @@ public class JTreeTableCellRenderer extends JTree implements TableCellRenderer {
 			List<DataNode> children = node.getChildren();
 			ListIterator<DataNode> e = children.listIterator();
 			while (e.hasNext()) {
-				DataNode treeNode = (DataNode) e.next();
+				DataNode treeNode = e.next();
 				if (expand) {
 					expandPath(path.pathByAddingChild(treeNode));
 				} else {
@@ -109,21 +108,18 @@ public class JTreeTableCellRenderer extends JTree implements TableCellRenderer {
 		super.paint(g);
 
 		/* Show Grid lines on the tree */
-		/*
-		 * if (treeTable.getShowHorizontalLines() &&
-		 * treeTable.getShowVerticalLines()) { Rectangle r =
-		 * treeTable.getCellRect(visibleRow, visibleColumn, false);
-		 * g.setColor(treeTable.getGridColor()); g.drawRect(r.x -
-		 * treeTable.getCellRect(visibleRow, 0, false).width - 1, r.y - 1,
-		 * r.width, r.height); }
-		 */
+		  if (treeTable.getShowHorizontalLines() &&
+		  treeTable.getShowVerticalLines()) { Rectangle r =
+		  treeTable.getCellRect(visibleRow, visibleColumn, false);
+		  g.setColor(treeTable.getGridColor()); g.drawRect(r.x -
+		  treeTable.getCellRect(visibleRow, 0, false).width - 1, r.y - 1,
+		  r.width, r.height); }
 
 	}
 
 	/**
 	 * Returns the renderer back with the appropriate background color.
 	 */
-
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 			int row, int column) {
 		boolean bgSet = false;
@@ -153,7 +149,9 @@ public class JTreeTableCellRenderer extends JTree implements TableCellRenderer {
 			}
 		}
 		if (!bgSet)
+		{
 			setBackground(table.getBackground());
+		}
 
 		visibleRow = row;
 		visibleColumn = column;

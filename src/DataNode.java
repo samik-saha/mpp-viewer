@@ -77,6 +77,46 @@ public  class  DataNode {
     	return resourceNames;
     }
 
+    public void setTaskID(int taskID) {
+        this.taskID = taskID;
+    }
+
+    public void setTask(String task) {
+        this.task = task;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public void setFinishDate(Date finishDate) {
+        this.finishDate = finishDate;
+    }
+
+    public void setDuration(String duration) {
+        this.duration = duration;
+    }
+
+    public void setPercentageComplete(String percentageComplete) {
+        this.percentageComplete = percentageComplete;
+    }
+
+    public void setPredecessors(String predecessors) {
+        this.predecessors = predecessors;
+    }
+
+    public void setResourceCount(int resourceCount) {
+        this.resourceCount = resourceCount;
+    }
+
+    public void setResourceNames(String resourceNames) {
+        this.resourceNames = resourceNames;
+    }
+
+    public void setChildren(List<DataNode> children) {
+        this.children = children;
+    }
+
     public  List <DataNode> getChildren () {
         return children;
     }

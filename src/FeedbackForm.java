@@ -26,7 +26,7 @@ public class FeedbackForm extends JDialog {
 	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
 	private final ButtonGroup buttonGroup = new ButtonGroup();
-	private JEditorPane dtrpnComments;
+	private final JEditorPane dtrpnComments;
 
 	/**
 	 * Launch the application.

@@ -25,11 +25,11 @@ public class Find extends JDialog {
 	 */
 	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
-	private JTextField textField;
+	private final JTextField textField;
 	MainWindow mainWindow;
-	private JButton btnFind;
-	private JLabel labelStatus;
-	private JButton btnFindPrevious;
+	private final JButton btnFind;
+	private final JLabel labelStatus;
+	private final JButton btnFindPrevious;
 
 	/**
 	 * Launch the application.

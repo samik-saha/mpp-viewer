@@ -3,9 +3,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JOptionPane;
-import javax.swing.JTable;
-import javax.swing.SwingWorker;
+import javax.swing.*;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
@@ -18,8 +16,8 @@ import net.sf.mpxj.mpp.MPPReader;
 import net.sf.mpxj.reader.ProjectReader;
 
 public class MPPFileReader extends SwingWorker<Void, Void> {
-	private File file;
-	private MainWindow mainWindow;
+	private final File file;
+	private final MainWindow mainWindow;
 
 	public MPPFileReader(MainWindow mw, File file) {
 		super();
@@ -39,12 +37,70 @@ public class MPPFileReader extends SwingWorker<Void, Void> {
 			mainWindow.treeTable.setShowGrid(true);
 			mainWindow.treeTable.expandAll(true);
 
+			// Create and set up the sortable header renderer by wrapping the existing one
+			TableCellRenderer existingRenderer = mainWindow.treeTable.getTableHeader().getDefaultRenderer();
+			final SortableHeaderRenderer sortableHeaderRenderer = new SortableHeaderRenderer(existingRenderer);
+			mainWindow.treeTable.getTableHeader().setDefaultRenderer(sortableHeaderRenderer);
+
+			// Add sorting by column header click with visual feedback
+			javax.swing.table.JTableHeader header = mainWindow.treeTable.getTableHeader();
+			header.addMouseListener(new java.awt.event.MouseAdapter() {
+				@Override
+				public void mouseClicked(java.awt.event.MouseEvent e) {
+					int col = header.columnAtPoint(e.getPoint());
+					if (col >= 0) {
+						try {
+							ProjectTreeTableModel model = (ProjectTreeTableModel) ((TreeTableModelAdapter) mainWindow.treeTable.getModel()).treeTableModel;
+
+							// Debug info
+							System.out.println("Sorting column: " + col);
+							System.out.println("Current tree expansion state:");
+							JTree tree = mainWindow.treeTable.getTree();
+							System.out.println("Tree row count: " + tree.getRowCount());
+
+							// Determine sort direction
+							boolean ascending = true;
+							if (model.getSortColumn() == col) {
+								// If clicking on already sorted column, toggle direction
+								ascending = !model.isAscending();
+							}
+
+							System.out.println("Sort direction: " + (ascending ? "ascending" : "descending"));
+
+							// Sort the model while preserving expansion state
+							model.sortByColumn(col, ascending, tree);
+							// Always expand all nodes after sorting
+							mainWindow.treeTable.expandAll(true);
+							// Update the header renderer to show sort indicator
+							sortableHeaderRenderer.setSortColumn(col, ascending);
+
+							// Refresh UI
+							mainWindow.treeTable.getTableHeader().repaint();
+							mainWindow.treeTable.repaint();
+
+							// Debug info after sort
+							System.out.println("After sorting - Tree row count: " + tree.getRowCount());
+						} catch (Exception ex) {
+							System.err.println("Error during sorting: " + ex.getMessage());
+							ex.printStackTrace();
+						}
+					}
+				}
+			});
+
 			/* Autofit columns to contents */
 			mainWindow.treeTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 			for (int column = 0; column < mainWindow.treeTable.getColumnCount(); column++) {
 				TableColumn tableColumn = mainWindow.treeTable.getColumnModel().getColumn(column);
 				int preferredWidth = tableColumn.getMinWidth();
 				int maxWidth = tableColumn.getMaxWidth();
+
+				// Consider header width for better column sizing
+				TableCellRenderer headerRenderer = mainWindow.treeTable.getTableHeader().getDefaultRenderer();
+				Component headerComp = headerRenderer.getTableCellRendererComponent(
+						mainWindow.treeTable, tableColumn.getHeaderValue(), false, false, 0, column);
+				int headerWidth = headerComp.getPreferredSize().width + mainWindow.treeTable.getIntercellSpacing().width + 10; // Add padding
+				preferredWidth = Math.max(preferredWidth, headerWidth);
 
 				for (int row = 0; row < mainWindow.treeTable.getRowCount(); row++) {
 					TableCellRenderer cellRenderer = mainWindow.treeTable.getCellRenderer(row, column);
@@ -54,11 +110,25 @@ public class MPPFileReader extends SwingWorker<Void, Void> {
 
 					// We've exceeded the maximum width, no need to check
 					// other rows
-
 					if (preferredWidth >= maxWidth) {
 						preferredWidth = maxWidth;
 						break;
 					}
+				}
+
+				// Add extra space for specific columns that need more room
+				String columnName = tableColumn.getHeaderValue().toString();
+				if (columnName.equals("Duration")) {
+					preferredWidth += 27;
+				} else if (columnName.equals("ID")) {
+					preferredWidth += 10;
+				}
+				else if (columnName.equals("Predecessors")) {
+					preferredWidth += 50;
+				} else if (columnName.equals("% Complete")) {
+					preferredWidth += 80;
+				} else if (columnName.contains("Resource Count")) {
+					preferredWidth += 190;
 				}
 
 				tableColumn.setPreferredWidth(preferredWidth);
@@ -105,7 +175,7 @@ public class MPPFileReader extends SwingWorker<Void, Void> {
 
 			/* Convert predecessor list to string of ids */
 			String predecessorsStr = "";
-			if (predecessors != null && predecessors.isEmpty() == false) {
+			if (predecessors != null && !predecessors.isEmpty()) {
 				for (Relation relation : predecessors) {
 					predecessorsStr = predecessorsStr + relation.getTargetTask().getID() + ",";
 				}
@@ -117,7 +187,7 @@ public class MPPFileReader extends SwingWorker<Void, Void> {
 
 			/* Create Comma Seperated List of resource names */
 			String resourceNames = "";
-			if (resourceAssignments != null && resourceAssignments.isEmpty() == false) {
+			if (resourceAssignments != null && !resourceAssignments.isEmpty()) {
 				resourceCount = resourceAssignments.size();
 				for (ResourceAssignment assignment : resourceAssignments) {
 					Resource resource = assignment.getResource();
@@ -149,6 +219,26 @@ public class MPPFileReader extends SwingWorker<Void, Void> {
 		mainWindow.scrollPane.remove(mainWindow.table);
 		mainWindow.scrollPane.setViewportView(mainWindow.treeTable);
 		//mainWindow.treeTable.setRowHeight(50);
+
+		// Calculate the total width needed for the table
+		int totalWidth = 0;
+		for (int i = 0; i < mainWindow.treeTable.getColumnCount(); i++) {
+			totalWidth += mainWindow.treeTable.getColumnModel().getColumn(i).getPreferredWidth();
+		}
+		// Add some padding for scrollbar and window borders
+		totalWidth += 30;
+
+		// Get current window dimensions
+		java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+		int currentHeight = mainWindow.getHeight();
+
+		// Set the new width, but don't exceed screen width
+		int newWidth = Math.min(totalWidth, screenSize.width - 50);
+		mainWindow.setSize(newWidth, currentHeight);
+
+		// Center the window on screen
+		mainWindow.setLocationRelativeTo(null);
+
 		mainWindow.scrollPane.validate();
 		mainWindow.scrollPane.repaint();
 		mainWindow.setTitle(mainWindow.APP_TITLE + " - " + file.getName());
@@ -159,6 +249,5 @@ public class MPPFileReader extends SwingWorker<Void, Void> {
 		// System.out.println(mainWindow.treeTable.getModel().getValueAt(9, 1));
 		// System.out.println(mainWindow.treeTable.getModel().getValueAt(10,
 		// 1));
-
 	}
 }

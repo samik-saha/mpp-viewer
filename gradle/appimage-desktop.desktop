@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=MPP Viewer
+Exec=AppRun
+Icon=mpp-viewer
+Type=Application
+Categories=Office;ProjectManagement;
+

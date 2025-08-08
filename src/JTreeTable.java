@@ -16,7 +16,7 @@ import javax.swing.tree.TreeSelectionModel;
 public class JTreeTable extends JTable {
 
 	private static final long serialVersionUID = 1L;
-	private JTreeTableCellRenderer tree;
+	private final JTreeTableCellRenderer tree;
 
 	@Override
 	public Component prepareRenderer(TableCellRenderer renderer, int row,
@@ -104,7 +104,7 @@ public class JTreeTable extends JTable {
 				this));
 
 		/* Set renderer for Table Header */
-		getTableHeader().setDefaultRenderer(new MyTableHeaderRenderer());
+		getTableHeader().setDefaultRenderer(new CustomTableHeaderRenderer());
 		getTableHeader().setReorderingAllowed(false);
 
 		/* Show Grid Lines */

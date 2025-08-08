@@ -23,15 +23,15 @@ public class ActionMapAction extends AbstractAction
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private Action originalAction;
-	private JComponent component;
+	private final Action originalAction;
+	private final JComponent component;
 	private String actionCommand = "";
 
 	/**
 	 *  Replace the default Action for the given KeyStroke with a custom Action
 	 *
 	 *  @param name       the name parameter of the Action
-	 *  @param componet   the component the Action belongs to
+	 *  @param component   the component the Action belongs to
 	 *  @param actionKey  the key to identify the Action in the ActionMap
 	 */
 	public ActionMapAction(String name, JComponent component, String actionKey)

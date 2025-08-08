@@ -2,7 +2,7 @@
 
 [MPP Viewer - Homepage](http://samik-saha.github.io/mpp-viewer/)
 
-###Features
+### Features
 
  * Supports Project Plan files in 2007/2010/2013 formats
  * Displays tasks in hierarchical manner
@@ -14,8 +14,9 @@
  * Associate .mpp files with mpp-viewer
  * Select and copy task information
 
-###Screenshots
-<img alt="Open MPP Files" src="http://a.fsdn.com/con/app/proj/mpp-viewer/screenshots/Capture.PNG" width=400 title="Open MPP Files"/>
+### Screenshots
+
+<img alt="Open MPP Files" src="./.doc/loaded_mpp_2025-07-10_18-44.png" width=400 title="Open MPP Files"/>
 <img alt="Highlight Complete and Late Tasks" src="http://a.fsdn.com/con/app/proj/mpp-viewer/screenshots/mpp-viewer-highlight.PNG" width=400 title="Highlight Complete and Late Tasks"/>
 <img alt="Select and Copy Text" src="http://a.fsdn.com/con/app/proj/mpp-viewer/screenshots/mpp-viewer%20copy.PNG" width=400 title="Select and Copy Text"/>
 <img alt="Search for Tasks" src="http://a.fsdn.com/con/app/proj/mpp-viewer/screenshots/Search.PNG" width=400 title="Search for Tasks"/>

@@ -1,0 +1,343 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+// Define the main class for the application
+mainClassName = 'MainWindow'
+applicationName = 'mpp-viewer'
+
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs 'lib'
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'lib', include: '*.jar')
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+        resources {
+            srcDirs = ['src']
+        }
+    }
+}
+
+processResources {
+    // Make sure resource files are included in the JAR
+    include '**/*.png'
+    include '**/*.gif'
+    include '**/*.jpg'
+    include '**/*.properties'
+}
+
+// Create a fat JAR with all dependencies
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'MainWindow'
+        )
+    }
+
+    // Include all dependencies in the JAR
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// Create directory for all executable outputs
+def executablesDir = "${buildDir}/executables"
+def jreDir = "${buildDir}/jre"
+
+// Task to download and prepare a minimal JRE for Windows
+task downloadJre {
+    doLast {
+        def jreArchive = "${buildDir}/jre-windows.zip"
+        // As far as I know, there is no Gradle API for downloading JREs,
+        // that's why I had to hardcode the URL.
+        // If you know a better way, feel free to replace it.
+        def jreUrl = "https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u382-b05/OpenJDK8U-jre_x64_windows_hotspot_8u382b05.zip"
+
+        // Create directories
+        mkdir buildDir
+        mkdir jreDir
+
+        // Only download if not already present
+        def jreArchiveFile = file(jreArchive)
+        if (!jreArchiveFile.exists()) {
+            println "Downloading JRE for Windows..."
+
+            // Download with Gradle API
+            ant.get(src: jreUrl, dest: jreArchive, skipexisting: true)
+
+            println "Downloaded JRE to ${jreArchive}"
+        } else {
+            println "JRE archive already exists at ${jreArchive}"
+        }
+
+        // Extract only if not already extracted
+        def extractedJre = file("${jreDir}/bin/java.exe")
+        if (!extractedJre.exists()) {
+            println "Extracting JRE..."
+
+            // Clean the directory first
+            delete jreDir
+            mkdir jreDir
+
+            // Extract the JRE
+            ant.unzip(src: jreArchive, dest: jreDir) {
+                cutdirsmapper(dirs: 1)
+            }
+
+            println "Extracted JRE to ${jreDir}"
+        } else {
+            println "JRE already extracted to ${jreDir}"
+        }
+    }
+}
+
+// Task to create Windows EXE file using launch4j (works on Linux too)
+task createExe(type: Exec) {
+    // Make sure JAR is created first and JRE is downloaded
+    dependsOn 'jar', 'downloadJre'
+
+    // Nicht nur auf Windows beschränken - funktioniert auch auf Linux
+    // onlyIf { org.gradle.internal.os.OperatingSystem.current().isWindows() }
+
+    doFirst {
+        println "Creating Windows EXE file..."
+
+        // Create executables directory if it doesn't exist
+        mkdir executablesDir
+
+        // Copy the JAR file directly here to ensure it exists
+        copy {
+            from "${buildDir}/libs/${project.name}-${version}.jar"
+            into executablesDir
+            rename "${project.name}-${version}.jar", "${project.name}.jar"
+        }
+
+        println "JAR file copied to ${executablesDir}/${project.name}.jar"
+
+        // Check if launch4j is installed - try local version first, then system version
+        def isWindows = org.gradle.internal.os.OperatingSystem.current().isWindows()
+        def launch4jCmd
+
+        File localLaunch4j = new File("${rootDir}/tools/launch4j/launch4j")
+        if (localLaunch4j.exists() && localLaunch4j.canExecute()) {
+            // Use local Launch4j installation
+            launch4jCmd = localLaunch4j.absolutePath
+            println "Using local Launch4j installation: ${launch4jCmd}"
+        } else {
+            // Try to use system installation or default path
+            launch4jCmd = isWindows ? "launch4jc.exe" : "launch4j"
+            println "Using system Launch4j installation: ${launch4jCmd}"
+        }
+
+        // Create a launch4j configuration file
+        def configFile = file("${buildDir}/launch4j-config.xml")
+        
+        // Copy the template and replace variables
+        def configTemplate = file("gradle/launch4j-config.xml").text
+        configTemplate = configTemplate.replace('${buildDir}', buildDir.toString())
+                                     .replace('${project.name}', project.name)
+                                     .replace('${version}', version.toString())
+                                     .replace('${rootDir}', rootDir.toString())
+                                     .replace('${executablesDir}', executablesDir.toString())
+                                     .replace('${jreDir}', jreDir.toString())
+
+        configFile.text = configTemplate
+
+        // Check if JAR exists before running Launch4j
+        def jarFile = file("${executablesDir}/${project.name}.jar")
+        if (!jarFile.exists()) {
+            throw new GradleException("JAR file not found at: ${jarFile}. Cannot create EXE without JAR.")
+        }
+
+        // Check if JRE exists
+        def jreFile = file("${jreDir}/bin/java.exe")
+        if (!jreFile.exists()) {
+            throw new GradleException("JRE not found at: ${jreDir}. Cannot create EXE with bundled JRE.")
+        }
+
+        // Execute launch4j
+        try {
+            commandLine launch4jCmd, configFile
+        } catch (Exception e) {
+            println "Error: Launch4j could not be executed. ${e.message}"
+            println "You need to install Launch4j or use the local version in tools/launch4j"
+            throw e
+        }
+    }
+
+    doLast {
+        println "Windows EXE file created at: ${executablesDir}/${project.name}.exe"
+        println "This EXE contains a bundled JRE and doesn't require Java to be installed."
+    }
+}
+
+// Task to create AppImage on Linux
+task createAppImage(type: Exec) {
+    dependsOn 'installDist'
+
+    onlyIf { org.gradle.internal.os.OperatingSystem.current().isLinux() }
+
+    // Set environment variable for appimagetool
+    environment "ARCH", "x86_64"
+
+    doFirst {
+        println "Creating AppImage..."
+
+        // Create executables directory if it doesn't exist
+        mkdir executablesDir
+
+        // Set the output file path
+        def appImageFile = file("${executablesDir}/MPP-Viewer.AppImage")
+
+        // Clean up any existing AppImage to avoid "Text file busy" error
+        if (appImageFile.exists()) {
+            println "Removing existing AppImage..."
+            appImageFile.delete()
+        }
+
+        // Create a temporary AppDir structure
+        delete "$buildDir/appdir"  // Delete existing appdir to ensure clean state
+        mkdir "$buildDir/appdir"
+        mkdir "$buildDir/appdir/usr"
+        mkdir "$buildDir/appdir/usr/bin"
+        mkdir "$buildDir/appdir/usr/share"
+        mkdir "$buildDir/appdir/usr/share/applications"
+        mkdir "$buildDir/appdir/usr/share/icons"
+        mkdir "$buildDir/appdir/usr/share/icons/hicolor"
+        mkdir "$buildDir/appdir/usr/share/icons/hicolor/256x256"
+        mkdir "$buildDir/appdir/usr/share/icons/hicolor/256x256/apps"
+
+        // Copy application files
+        copy {
+            from "${buildDir}/install/${project.name}/bin"
+            into "$buildDir/appdir/usr/bin"
+        }
+
+        copy {
+            from "${buildDir}/install/${project.name}/lib"
+            into "$buildDir/appdir/usr/lib"
+        }
+
+        // Copy icon to both locations - AppDir root and standard location
+        copy {
+            from 'src/res/icon32.png'
+            into "$buildDir/appdir/usr/share/icons/hicolor/256x256/apps"
+            rename 'icon32.png', 'mpp-viewer.png'
+        }
+
+        // Also copy icon to AppDir root (required by AppImage spec)
+        copy {
+            from 'src/res/icon32.png'
+            into "$buildDir/appdir/"
+            rename 'icon32.png', 'mpp-viewer.png'
+        }
+
+        // Copy desktop file to both standard location and AppDir root
+        copy {
+            from 'gradle/appimage-desktop.desktop'
+            into "$buildDir/appdir/usr/share/applications"
+            rename 'appimage-desktop.desktop', 'mpp-viewer.desktop'
+        }
+
+        copy {
+            from 'gradle/appimage-desktop.desktop'
+            into "$buildDir/appdir/"
+            rename 'appimage-desktop.desktop', 'mpp-viewer.desktop'
+        }
+
+        // Copy and set permissions for AppRun file
+        copy {
+            from 'gradle/appimage-apprun'
+            into "$buildDir/appdir"
+            rename 'appimage-apprun', 'AppRun'
+        }
+
+        exec {
+            commandLine 'chmod', '+x', "$buildDir/appdir/AppRun"
+        }
+    }
+
+    // Check if appimagetool is in PATH, download if not available
+    def checkAppImageTool = tasks.create("checkAppImageTool") {
+        doLast {
+            def appimageToolInPath = false
+
+            try {
+                def process = "which appimagetool".execute()
+                process.waitFor()
+                if (process.exitValue() == 0 && process.text.trim()) {
+                    appimageToolInPath = true
+                }
+            } catch (Exception e) {
+                // Command failed, tool not in path
+            }
+
+            if (!appimageToolInPath) {
+                println "appimagetool not found in PATH, downloading temporary copy..."
+                exec {
+                    commandLine 'bash', '-c',
+                        'rm -f /tmp/appimagetool && wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O /tmp/appimagetool && chmod +x /tmp/appimagetool'
+                }
+
+                // Update command for createAppImage task
+                project.tasks.findByName('createAppImage').commandLine = ['/tmp/appimagetool', "$buildDir/appdir", "${executablesDir}/MPP-Viewer.AppImage"]
+            }
+        }
+    }
+
+    dependsOn checkAppImageTool
+
+    // Command to create AppImage (this will be used if appimagetool is in PATH)
+    workingDir "$buildDir"
+    commandLine 'appimagetool', 'appdir', "${executablesDir}/MPP-Viewer.AppImage"
+
+    doLast {
+        println "AppImage created at: ${executablesDir}/MPP-Viewer.AppImage"
+        println "You can run it with: ${executablesDir}/MPP-Viewer.AppImage"
+    }
+}
+
+// Task to copy JAR to executables directory
+task copyJarToExecutables(type: Copy) {
+    dependsOn 'jar'
+    from "${buildDir}/libs/${project.name}-${version}.jar"
+    into executablesDir
+    rename "${project.name}-${version}.jar", "${project.name}.jar"
+}
+
+// Unified task to create all executables
+task createExecutables {
+    dependsOn 'copyJarToExecutables'
+    dependsOn 'createExe'  // Jetzt immer die EXE-Datei erstellen, unabhängig vom Betriebssystem
+
+    if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
+        dependsOn 'createAppImage'  // Nur auf Linux auch das AppImage erstellen
+    }
+
+    doLast {
+        println "All executables created in: ${executablesDir}/"
+        println "Created JAR file: ${executablesDir}/${project.name}.jar"
+        println "Created EXE file: ${executablesDir}/${project.name}.exe"
+
+        if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
+            println "Created AppImage: ${executablesDir}/MPP-Viewer.AppImage"
+        }
+    }
+}
+
+version = '1.0.0'

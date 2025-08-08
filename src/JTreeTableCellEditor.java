@@ -13,8 +13,8 @@ public class JTreeTableCellEditor extends AbstractCellEditor implements TableCel
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private JTree tree;
-    private JTable table;
+	private final JTree tree;
+    private final JTable table;
 
     public JTreeTableCellEditor(JTree tree, JTable table) {
         this.tree = tree;

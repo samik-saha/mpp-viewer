@@ -53,34 +53,34 @@ public class MainWindow extends JFrame {
 	protected static boolean highlight100pct = false;
 	protected static Color COLOR_highlightDelayedTasks = new Color(255, 178, 178);
 	protected static boolean highlightDelayedTasks = false;
-	private JPanel contentPane;
+	private final JPanel contentPane;
 	JTable table;
-	private JFileChooser fc;
+	private final JFileChooser fc;
 	ProjectFile projectFile;
 	JTreeTable treeTable;
 	JScrollPane scrollPane;
 	private static File mppFile;
 	final String APP_TITLE = "MPP Viewer (Beta)";
-	private JCheckBoxMenuItem mntmCompletedTasks;
-	private JCheckBoxMenuItem mntmDelayedTasks;
-	private JToggleButton btnHighlight;
-	private JToggleButton btnHighlightDelayedTasks;
+	private final JCheckBoxMenuItem mntmCompletedTasks;
+	private final JCheckBoxMenuItem mntmDelayedTasks;
+	private final JToggleButton btnHighlight;
+	private final JToggleButton btnHighlightDelayedTasks;
 	JLabel lblStatus;
 	JProgressBar progressBar;
 	private Find findDialog;
-	private JButton btnFind;
-	private JMenuItem mntmFind;
-	private JMenuItem mntmSelectAll;
-	private JMenuItem mntmCopy;
-	private JMenuItem mntmCollapseAllTasks;
-	private JMenuItem mntmExpandAllTasks;
-	private JMenuItem mntmShowSubtasksCollapsed;
-	private JMenu mnHighlight;
-	private JMenuItem mntmExportToExcel;
-	private JButton btnExportToExcel;
-	private JButton btnExpandAll;
-	private JButton btnCollapseAll;
-	private JButton btnCollapsedSubtasks;
+	private final JButton btnFind;
+	private final JMenuItem mntmFind;
+	private final JMenuItem mntmSelectAll;
+	private final JMenuItem mntmCopy;
+	private final JMenuItem mntmCollapseAllTasks;
+	private final JMenuItem mntmExpandAllTasks;
+	private final JMenuItem mntmShowSubtasksCollapsed;
+	private final JMenu mnHighlight;
+	private final JMenuItem mntmExportToExcel;
+	private final JButton btnExportToExcel;
+	private final JButton btnExpandAll;
+	private final JButton btnCollapseAll;
+	private final JButton btnCollapsedSubtasks;
 
 	/**
 	 * Launch the application.
@@ -128,8 +128,10 @@ public class MainWindow extends JFrame {
 		setTitle("MPP Viewer (beta)");
 		fc = new JFileChooser(".");
 
+		// Set Screen Size and position of the window
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 800, 600);
+		setBounds(50, 0, screenSize.width - screenSize.width / 10, screenSize.height - screenSize.height / 10);
 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -367,7 +369,8 @@ public class MainWindow extends JFrame {
 		table.getColumnModel().getColumn(0).setPreferredWidth(26);
 		table.getColumnModel().getColumn(1).setPreferredWidth(280);
 		table.getColumnModel().getColumn(1).setMinWidth(100);
-		table.getTableHeader().setDefaultRenderer(new MyTableHeaderRenderer());
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		table.getTableHeader().setDefaultRenderer(new CustomTableHeaderRenderer());
 		
 		JToolBar toolBar_3 = new JToolBar();
 		toolBar_3.setBorderPainted(false);
